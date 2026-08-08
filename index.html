@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Masuk — SalesBoard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<!-- Supabase JS client (dipakai hanya jika USE_SUPABASE = true di js/config.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-visual">
+    <div class="brand">
+      <span class="logo-mark">📊</span>
+      SalesBoard
+    </div>
+    <div class="pitch">
+      <h2>Pantau performa penjualan Anda dalam satu layar.</h2>
+      <p>Ringkasan transaksi, tren bulanan, dan produk terlaris — selalu update, siap diekspor kapan saja.</p>
+    </div>
+    <div class="stats">
+      <div><strong>65+</strong><span>Transaksi tercatat</span></div>
+      <div><strong>10</strong><span>Kategori produk</span></div>
+      <div><strong>2</strong><span>Format ekspor</span></div>
+    </div>
+  </div>
+
+  <div class="login-form-wrap">
+    <div class="login-card">
+      <h1>Masuk ke akun Anda</h1>
+      <span class="sub">Kelola laporan penjualan toko Anda</span>
+
+      <div id="login-error" class="login-error hidden"></div>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="admin" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn-primary">Masuk</button>
+      </form>
+
+      <div class="login-hint">
+        Demo akun Owner — username: <strong>owner</strong>, password: <strong>owner123</strong><br/>
+        Demo akun Kasir — username: <strong>kasir</strong>, password: <strong>kasir123</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script>initLoginForm();</script>
+</body>
+</html>
