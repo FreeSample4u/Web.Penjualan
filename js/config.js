@@ -20,8 +20,8 @@
 const APP_CONFIG = {
   USE_SUPABASE: false,
 
-  SUPABASE_URL: 'https://your-project-id.supabase.co',
-  SUPABASE_ANON_KEY: 'your-anon-public-key',
+  SUPABASE_URL: 'https://kxjfbfyuijlhjwzrbros.supabase.co/rest/v1/',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4amZiZnl1aWpsaGp3enJicm9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyOTEyMDUsImV4cCI6MjEwMTg2NzIwNX0.Lq7GO-8-NZxGrB5VFV1mzlLTd5JkqzctdKQ9fCj7DNg',
 
   // Ambang batas "stok tipis" — di bawah/sama dengan angka ini akan memicu notifikasi
   LOW_STOCK_THRESHOLD: 10,
