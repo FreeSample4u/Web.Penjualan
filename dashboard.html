@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard Laporan Penjualan — SalesBoard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<!-- SheetJS (Excel) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF + autotable (PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- Supabase JS client (dipakai hanya jika USE_SUPABASE = true di js/config.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="logo-mark">📊</span>
+      SalesBoard
+    </div>
+
+    <nav>
+      <div class="nav-group-label">Menu Utama</div>
+      <a href="#" class="nav-link" data-view="dashboard" data-title="Dashboard">
+        <span class="icon">🏠</span> Dashboard
+      </a>
+      <a href="#" class="nav-link" data-view="produk" data-title="Laporan Produk">
+        <span class="icon">📦</span> Laporan Produk
+      </a>
+      <a href="#" class="nav-link" data-view="transaksi" data-title="Transaksi">
+        <span class="icon">🧾</span> Transaksi
+      </a>
+      <a href="#" class="nav-link" data-view="pengaturan" data-title="Pengaturan">
+        <span class="icon">⚙️</span> Pengaturan
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="userInitial">A</div>
+        <div>
+          <div class="name" id="userNameLabel">Admin</div>
+          <div class="role"><span class="role-badge" id="roleBadge">Owner</span></div>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtnSidebar">Keluar</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="left">
+        <button class="hamburger" id="hamburgerBtn">☰</button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="right">
+        <button class="icon-btn theme-toggle" title="Ganti tema">
+          <span class="theme-toggle-icon">🌙</span>
+        </button>
+        <div class="user-chip" style="padding:6px 12px;">
+          <div class="avatar" style="width:28px;height:28px;font-size:11px;" id="userInitial2">A</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ================= VIEW: DASHBOARD (khusus Owner) ================= -->
+      <section class="view" id="view-dashboard">
+        <div class="page-head">
+          <div>
+            <h2>Ringkasan Penjualan</h2>
+            <span class="sub">Ikhtisar performa penjualan toko Anda saat ini</span>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row">
+              <span class="label">Total Penjualan</span>
+              <div class="icon-badge badge-blue">💰</div>
+            </div>
+            <div class="value" id="sumTotalSales">Rp 0</div>
+            <span class="delta up">▲ 12.4% dari bulan lalu</span>
+          </div>
+
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row">
+              <span class="label">Jumlah Transaksi</span>
+              <div class="icon-badge badge-teal">🧾</div>
+            </div>
+            <div class="value" id="sumTotalTrx">0</div>
+            <span class="delta up">▲ 8.1% dari bulan lalu</span>
+          </div>
+
+          <div class="card summary-card owner-only" data-animate-item>
+            <div class="top-row">
+              <span class="label">Piutang / Pending</span>
+              <div class="icon-badge badge-amber">⏳</div>
+            </div>
+            <div class="value" id="sumPending">Rp 0</div>
+            <span class="delta down" id="sumPendingCount" style="background:transparent;padding:0;color:var(--text-muted);">0 transaksi menunggu</span>
+          </div>
+
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row">
+              <span class="label">Rata-rata Nilai Transaksi</span>
+              <div class="icon-badge badge-amber">📈</div>
+            </div>
+            <div class="value" id="sumAvgTrx">Rp 0</div>
+            <span class="delta down">▼ 2.3% dari bulan lalu</span>
+          </div>
+
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row">
+              <span class="label">Produk Terlaris</span>
+              <div class="icon-badge badge-green">🏆</div>
+            </div>
+            <div class="value" id="sumTopProduct" style="font-size:16px;">-</div>
+            <span class="delta up" id="sumTopProductQty" style="background:transparent;padding:0;color:var(--text-muted);"></span>
+          </div>
+
+          <div class="card summary-card owner-only" data-animate-item>
+            <div class="top-row">
+              <span class="label">Keuntungan Bersih</span>
+              <div class="icon-badge badge-green">💵</div>
+            </div>
+            <div class="value" id="sumNetProfit">Rp 0</div>
+            <span class="delta up" style="background:transparent;padding:0;color:var(--text-muted);">Dari transaksi berstatus Lunas</span>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="card card-pad chart-card" data-animate-item>
+            <h3>Tren Penjualan Bulanan</h3>
+            <span class="sub">Total penjualan per bulan (Rp)</span>
+            <div class="chart-canvas-wrap">
+              <canvas id="lineChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card card-pad chart-card" data-animate-item>
+            <h3>Kategori Produk Terlaris</h3>
+            <span class="sub">Persentase kontribusi penjualan</span>
+            <div class="chart-canvas-wrap" style="height:190px;">
+              <canvas id="pieChart"></canvas>
+            </div>
+            <div class="legend-list" id="pieLegend"></div>
+          </div>
+        </div>
+
+        <!-- Grid Box Persentase Kategori (mini-chart ala ERP) -->
+        <div class="card card-pad" data-animate-item style="margin-bottom:22px;">
+          <h3 style="margin-bottom:2px;">Ringkasan Kontribusi Kategori</h3>
+          <span class="sub" style="font-size:12.5px;color:var(--text-muted);">Kotak persentase tiap kategori produk terhadap total penjualan</span>
+          <div class="category-box-grid" id="categoryBoxGrid" style="margin-top:14px;"></div>
+        </div>
+
+        <!-- Transaksi terbaru -->
+        <div class="card card-pad" data-animate-item>
+          <h3 style="margin-bottom:14px;">Transaksi Terbaru</h3>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID Transaksi</th><th>Tanggal</th><th>Pelanggan</th><th>Produk</th><th>Total</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: LAPORAN PRODUK (khusus Owner) ================= -->
+      <section class="view" id="view-produk">
+        <div class="page-head">
+          <div>
+            <h2>Laporan Produk</h2>
+            <span class="sub">Peringkat penjualan & manajemen stok produk</span>
+          </div>
+          <button class="btn btn-add" id="btnAddProduct">+ Tambah Produk Baru</button>
+        </div>
+
+        <div class="product-grid">
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row"><span class="label">Total Produk Terdaftar</span><div class="icon-badge badge-blue">📦</div></div>
+            <div class="value" id="prodTotalItems">0</div>
+          </div>
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row"><span class="label">Kategori Terlaris</span><div class="icon-badge badge-teal">🏷️</div></div>
+            <div class="value" id="prodTopCategory" style="font-size:17px;">-</div>
+          </div>
+          <div class="card summary-card" data-animate-item>
+            <div class="top-row"><span class="label">Total Unit Terjual</span><div class="icon-badge badge-green">📊</div></div>
+            <div class="value" id="prodTotalUnits">0</div>
+          </div>
+        </div>
+
+        <div class="card card-pad" data-animate-item style="margin-bottom:16px;">
+          <h3 style="margin-bottom:6px;">Peringkat Produk Terlaris</h3>
+          <span class="sub" style="font-size:12.5px;color:var(--text-muted);">Diurutkan berdasarkan total nilai penjualan</span>
+          <div id="productRankList" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="card card-pad" data-animate-item>
+          <h3 style="margin-bottom:14px;">Manajemen Produk</h3>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Produk</th><th>Kategori</th><th>Harga Beli</th><th>Harga Jual</th><th>Stok</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="productMgmtBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: TRANSAKSI ================= -->
+      <section class="view" id="view-transaksi">
+        <div class="page-head">
+          <div>
+            <h2>Data Transaksi</h2>
+            <span class="sub">Cari, filter, dan ekspor laporan penjualan &middot; <span class="owner-only">klik dua kali pada baris untuk detail lengkap & cetak nota</span></span>
+          </div>
+          <button class="btn btn-add" id="btnAddTransaction">+ Tambah Transaksi Baru</button>
+        </div>
+
+        <div class="card card-pad" data-animate-item>
+          <div class="toolbar">
+            <div class="filters">
+              <div class="search-box">
+                <span class="icon">🔍</span>
+                <input type="text" id="tableSearch" placeholder="Cari ID, pelanggan, produk..." />
+              </div>
+              <input type="date" id="dateFrom" class="date-input" title="Dari tanggal" />
+              <span style="color:var(--text-faint);font-size:13px;">–</span>
+              <input type="date" id="dateTo" class="date-input" title="Sampai tanggal" />
+              <select id="statusFilter" class="select-input">
+                <option value="all">Semua Status</option>
+                <option value="Lunas">Lunas</option>
+                <option value="Pending">Pending</option>
+              </select>
+              <button class="btn" id="resetFilters">Reset</button>
+            </div>
+
+            <div class="btn-export">
+              <button class="btn btn-pdf" id="exportPdfBtn">📄 Ekspor PDF</button>
+              <button class="btn btn-excel" id="exportExcelBtn">📊 Ekspor Excel</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-sort="id">ID Transaksi</th>
+                  <th data-sort="date">Tanggal</th>
+                  <th data-sort="time">Waktu</th>
+                  <th data-sort="customer">Nama Pelanggan</th>
+                  <th data-sort="product">Produk</th>
+                  <th data-sort="qty">Jumlah</th>
+                  <th data-sort="total">Total Harga</th>
+                  <th data-sort="status">Status</th>
+                  <th id="actionColHeader">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <span class="info" id="tableInfo"></span>
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: PENGATURAN (khusus Owner) ================= -->
+      <section class="view" id="view-pengaturan">
+        <div class="page-head">
+          <div>
+            <h2>Pengaturan</h2>
+            <span class="sub">Preferensi tampilan, akun, & manajemen kasir</span>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <div class="card card-pad" data-animate-item>
+            <h3 style="margin-bottom:4px;">Tampilan</h3>
+            <span class="sub" style="font-size:12.5px;color:var(--text-muted);">Sesuaikan tema dashboard</span>
+
+            <div class="settings-row">
+              <div class="txt">
+                <strong>Tema Warna</strong>
+                <span>Pilih Terang atau Gelap</span>
+              </div>
+              <div class="theme-switch-group">
+                <button class="theme-option" data-theme="light">☀️ Terang</button>
+                <button class="theme-option" data-theme="dark">🌙 Gelap</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-pad" data-animate-item>
+            <h3 style="margin-bottom:4px;">Akun</h3>
+            <span class="sub" style="font-size:12.5px;color:var(--text-muted);">Informasi sesi login Anda</span>
+
+            <div class="settings-row">
+              <div class="txt">
+                <strong id="acctName">Admin</strong>
+                <span>Login sebagai <span id="acctRole">Owner</span></span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="txt">
+                <strong>Keluar dari akun</strong>
+                <span>Anda akan diarahkan kembali ke halaman masuk</span>
+              </div>
+              <button class="btn" id="logoutBtn" style="color:var(--danger);border-color:var(--danger);">Keluar</button>
+            </div>
+          </div>
+
+          <div class="card card-pad owner-only" data-animate-item>
+            <h3 style="margin-bottom:4px;">Kelola Profil Owner</h3>
+            <span class="sub" style="font-size:12.5px;color:var(--text-muted);">Ubah nama toko/pemilik dan password akun Owner Anda</span>
+
+            <form id="ownerProfileForm" style="margin-top:16px;">
+              <div class="form-row">
+                <label for="ownerProfileName">Nama Toko / Pemilik</label>
+                <input type="text" id="ownerProfileName" placeholder="cth. Toko Makmur Jaya" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-row">
+                  <label for="ownerProfilePassword">Password Baru</label>
+                  <input type="password" id="ownerProfilePassword" placeholder="Kosongkan jika tidak diubah" autocomplete="new-password" />
+                </div>
+                <div class="form-row">
+                  <label for="ownerProfilePasswordConfirm">Konfirmasi Password Baru</label>
+                  <input type="password" id="ownerProfilePasswordConfirm" placeholder="Ulangi password baru" autocomplete="new-password" />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-inline">Simpan Perubahan Profil</button>
+            </form>
+          </div>
+
+          <div class="card card-pad owner-only" data-animate-item style="grid-column: 1 / -1;">
+            <h3 style="margin-bottom:4px;">Manajemen Akun Kasir</h3>
+            <span class="sub" style="font-size:12.5px;color:var(--text-muted);">Buat akun untuk kasir/penjaga toko. Akun kasir hanya bisa mengakses menu Transaksi.</span>
+
+            <form id="kasirForm" style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
+              <div class="form-row" style="margin-bottom:0;">
+                <label for="kasirName">Nama Kasir</label>
+                <input type="text" id="kasirName" placeholder="cth. Rina" required />
+              </div>
+              <div class="form-row" style="margin-bottom:0;">
+                <label for="kasirUsername">Username</label>
+                <input type="text" id="kasirUsername" placeholder="cth. rina" required />
+              </div>
+              <div class="form-row" style="margin-bottom:0;">
+                <label for="kasirPassword">Password</label>
+                <input type="text" id="kasirPassword" placeholder="Buat password" required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-inline" style="height:41px;">+ Tambah Kasir</button>
+            </form>
+
+            <div id="kasirAccountList" style="margin-top:18px;"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ MODAL: TAMBAH/EDIT TRANSAKSI ============ -->
+<div class="modal-overlay" id="modalTransaksi">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="trxModalTitle">Tambah Transaksi Baru</h3>
+      <button class="modal-close-btn" data-close-modal="modalTransaksi">&times;</button>
+    </div>
+    <form id="trxForm">
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="trxProduct">Pilih Produk</label>
+          <select id="trxProduct" required></select>
+        </div>
+        <div class="form-row-2">
+          <div class="form-row">
+            <label for="trxQty">Jumlah Unit</label>
+            <input type="number" id="trxQty" min="1" value="1" required />
+          </div>
+          <div class="form-row">
+            <label for="trxDate">Tanggal</label>
+            <input type="date" id="trxDate" required />
+          </div>
+        </div>
+        <div class="trx-preview">
+          <span>Total Harga</span>
+          <span id="trxTotalPreview">Rp 0</span>
+        </div>
+        <div class="trx-stock-warn" id="trxStockWarn"></div>
+
+        <div class="form-row">
+          <label for="trxCustomer">Nama Pelanggan</label>
+          <input type="text" id="trxCustomer" placeholder="cth. Andi Saputra" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-row">
+            <label for="trxPayment">Metode Pembayaran</label>
+            <select id="trxPayment">
+              <option>Tunai</option>
+              <option>Transfer Bank</option>
+              <option>QRIS</option>
+              <option>Kartu Debit/Kredit</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="trxStatus">Status</label>
+            <select id="trxStatus">
+              <option value="Lunas">Lunas</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal="modalTransaksi">Batal</button>
+        <button type="submit" class="btn btn-primary btn-inline">Simpan Transaksi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: TAMBAH/EDIT PRODUK ============ -->
+<div class="modal-overlay" id="modalProduk">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="prodModalTitle">Tambah Produk Baru</h3>
+      <button class="modal-close-btn" data-close-modal="modalProduk">&times;</button>
+    </div>
+    <form id="productForm">
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="prodName">Nama Produk</label>
+          <input type="text" id="prodName" placeholder="cth. Kemeja Flanel Pria" required />
+        </div>
+        <div class="form-row">
+          <label for="prodCategory">Kategori</label>
+          <input type="text" id="prodCategory" placeholder="cth. Fashion Pria" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-row">
+            <label for="prodBuyPrice">Harga Beli (Rp)</label>
+            <input type="number" id="prodBuyPrice" min="0" required />
+          </div>
+          <div class="form-row">
+            <label for="prodSellPrice">Harga Jual (Rp)</label>
+            <input type="number" id="prodSellPrice" min="0" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="prodStock">Stok Awal</label>
+          <input type="number" id="prodStock" min="0" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal="modalProduk">Batal</button>
+        <button type="submit" class="btn btn-primary btn-inline">Simpan Produk</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: RESTOCK / TAMBAH STOK ============ -->
+<div class="modal-overlay" id="modalRestock">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head">
+      <h3>Restock / Tambah Stok</h3>
+      <button class="modal-close-btn" data-close-modal="modalRestock">&times;</button>
+    </div>
+    <form id="restockForm">
+      <div class="modal-body">
+        <div class="restock-info-box">
+          <div class="txt"><strong id="restockProductName">-</strong><span id="restockProductCategory">-</span></div>
+          <div class="stock-now">
+            <span>Stok saat ini</span>
+            <strong id="restockCurrentStock">0</strong>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:16px;">
+          <label for="restockQty">Jumlah Barang Masuk</label>
+          <input type="number" id="restockQty" min="1" placeholder="cth. 10" required />
+        </div>
+        <div class="trx-preview">
+          <span>Total Stok Baru</span>
+          <span id="restockNewTotal">0</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close-modal="modalRestock">Batal</button>
+        <button type="submit" class="btn btn-primary btn-inline">Simpan Restock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: DETAIL TRANSAKSI (khusus Owner, dobel-klik baris) ============ -->
+<div class="modal-overlay" id="modalTrxDetail">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-head">
+      <h3 id="trxDetailTitle">Detail Transaksi</h3>
+      <button class="modal-close-btn" data-close-modal="modalTrxDetail">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="trx-detail-list" id="trxDetailList"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" data-close-modal="modalTrxDetail">Tutup</button>
+      <button type="button" class="btn btn-primary btn-inline" id="printReceiptBtn">🖨️ Cetak Struk / Nota</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AREA CETAK STRUK (tampil hanya saat print, disembunyikan di layar) ============ -->
+<div id="print-area">
+  <div id="receiptPrintArea"></div>
+</div>
+
+<!-- ============ BOTTOM NAV (mobile) ============ -->
+<nav class="bottom-nav" id="bottomNav">
+  <a href="#" class="bottom-nav-link" data-view="dashboard" data-title="Dashboard">
+    <span class="icon">🏠</span><span class="label">Dashboard</span>
+  </a>
+  <a href="#" class="bottom-nav-link" data-view="produk" data-title="Laporan Produk">
+    <span class="icon">📦</span><span class="label">Produk</span>
+  </a>
+  <a href="#" class="bottom-nav-link" data-view="transaksi" data-title="Transaksi">
+    <span class="icon">🧾</span><span class="label">Transaksi</span>
+  </a>
+  <a href="#" class="bottom-nav-link" data-view="pengaturan" data-title="Pengaturan">
+    <span class="icon">⚙️</span><span class="label">Atur</span>
+  </a>
+</nav>
+
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/animate.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/table.js"></script>
+<script src="js/export.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
